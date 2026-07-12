@@ -201,7 +201,7 @@ while True:
 
 **Objective:** Split a +24 V DC input into symmetric +12 V and −12 V rails to power op-amps throughout the system. Rails must remain stable under varying load.
 
-**Theory of Operation:** Virtual ground from a 24 V source. TL081 unity-gain follower at the 12 V midpoint drives IRFZ34N + IRF5305 push-pull stage. Virtual ground tied to Pi GND → +12 V above, −12 V below.
+**Theory of Operation:** Virtual ground from a 24 V source. TL081 unity-gain follower at the 12 V midpoint drives IRFZ34N + IRF5305 push-pull stage. Virtual ground tied to Pi GND → +12 V above, −12 V below. The virtual ground node acts as the absolute **0 V** reference point for all analog measurements. To prevent heavy analog return currents from injecting noise into the digital plane, the Raspberry Pi GND is tied to this virtual ground at a **single star-ground point** right at the power entry terminal.
 
 1. **Voltage reference:** Matched 10 kΩ divider + Zener clamping → 12 V at TL081 pin 3
 2. **Unity-gain buffering:** 100 kΩ feedback drives MOSFET gates
@@ -240,7 +240,7 @@ while True:
 
 **Objective:** High-accuracy auto-ranging digital ohmmeter for **500 Ω to 10 kΩ**.
 
-**Theory of Operation:** Voltage divider with unknown resistor vs. **7-bit MCP4131** programmable reference. Successive approximation across 128 wiper steps; LM339 comparator on GPIO 21. LCD updates every 500 ms with ±10% tolerance.
+**Theory of Operation:** Voltage divider with unknown resistor vs. **7-bit MCP4131** programmable reference. Successive approximation across 128 wiper steps; LM339 comparator on GPIO 21. LCD updates every 500 ms with ±10% tolerance. A fixed series current-limiting resistor (**R_limit = 1 kΩ**) is placed in series with the unknown device under test (DUT). This keeps the maximum current through the MCP4131 wiper well below its absolute maximum rating of **2.5 mA** even when measuring low resistances down to **500 Ω**.
 
 | Signal | GPIO | Component Pin |
 |---|---|---|
@@ -401,7 +401,7 @@ Original binary-weighted DAC with per-GPIO comparator buffers suffered **cross-l
 **Objective:** **0 – 10 V peak** sine wave from **1 kHz to 10 kHz**.
 
 1. **U3 — TL081 buffer:** Pi audio jack + −5 V DC offset
-2. **U4 & U5 — Scaling:** Normalize to 0–3.3 V
+2. **U4 & U5 — Scaling:** Normalize to 0–3.3 V. Because the Raspberry Pi audio jack outputs a line-level AC signal (≈1 V pk-pk), **U4** is configured as a non-inverting amplifier with a hardware gain of **A_v ≈ 3.3** to scale the raw audio voltage up to the required **3.3 V** internal logic dynamic range before attenuation.
 3. **U10 — MCP4131:** Digital attenuation via SPI
 4. **U11 & U12 — Output:** Reconstruct to 0–10 V
 
