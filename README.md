@@ -249,6 +249,9 @@ while True:
 | SPI Data (SDI/SDO) | 10 | MCP4131 Pin 3 |
 | Comparator Output | 21 | LM339 Output |
 
+> [!NOTE]
+> **SAR performance (8-bit search):** Each iteration writes one MCP4131 wiper step over SPI (1 MHz, 2-byte frame ≈ 16 µs), waits **5 ms** for the divider/comparator to settle (`sleep(0.005)`), then reads GPIO 21. Eight bisection steps → **≈40 ms** per resistance reading, well under the **500 ms** LCD refresh cadence. Quantization is set by the **128-step** digipot (7-bit effective range); resistance resolution is non-linear with step (`R = R_known × step / (128 − step)`) and tightest near the matched mid-scale point.
+
 </details>
 
 ---
@@ -278,6 +281,9 @@ while True:
 | SPI Clock (SCK) | 11 | MCP4131 Pin 2 |
 | SPI Data (SDI/SDO) | 10 | MCP4131 Pin 3 |
 | Comparator Output | 6 | LM339 Pin 13 |
+
+> [!NOTE]
+> **SAR performance (8-bit search):** Same 8-iteration binary search as the ohmmeter — one SPI wiper write + **5 ms** settle per step → **≈40 ms** total sweep, safely below the **500 ms** display refresh rate. The ±10 V input span maps to 128 comparator steps, giving a theoretical **≈78 mV/step** (`10 V / 128 ≈ 78 mV`); linear interpolation between calibrated lookup points improves display accuracy to ±0.2 V.
 
 **Calibration & Testing:** Verified against reference multimeter across full range. SAR converges in 8 iterations. ±0.2 V accuracy; best precision near 0 V.
 
@@ -311,7 +317,7 @@ while True:
 
 *Figure 4.4.2: Previous DC Ref Schematic*
 
-Original binary-weighted DAC with per-GPIO comparator buffers suffered **cross-loading**. R-2R ladder maintains uniform 2R impedance regardless of bit pattern.
+Original binary-weighted DAC with per-GPIO comparator buffers suffered **cross-loading**. R-2R ladder maintains uniform 2R impedance regardless of bit pattern. The R-2R ladder ensures the digital pins always see a constant output impedance of **R** (or **2R** depending on the node), preventing the voltage sag and non-monotonicity caused by varying pin source impedances in the previous binary-weighted layout.
 
 </details>
 
@@ -370,6 +376,8 @@ Original binary-weighted DAC with per-GPIO comparator buffers suffered **cross-l
 **Objective:** Measure **0 V to +10 V** sine input frequency from **1 kHz to 10 kHz**.
 
 **Theory:** LM339 threshold at **+1.65 V** → digital edges on GPIO 25 → **f = 1/T**. 100-period rolling buffer with >2σ outlier rejection.
+
+**pigpio edge architecture:** On standard Linux (non-real-time), Python thread scheduling would jitter any bit-banged timing. The `pigpio` daemon sidesteps this by sampling GPIO transitions with **hardware-level DMA**, stamping each rising edge with a **microsecond-accurate tick** (`pigpio.tickDiff`) in a background buffer. The Python callback only appends period samples; `compute_frequency()` runs on the 500 ms UI loop, decoupling the timing-critical edge capture from GIL contention and kernel scheduling delay.
 
 | Signal | GPIO | Component Pin |
 |---|---|---|
