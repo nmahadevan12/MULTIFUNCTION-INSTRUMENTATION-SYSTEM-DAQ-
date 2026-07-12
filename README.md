@@ -159,6 +159,8 @@ Software is the core of the system — it links the user interface to hardware m
 
 The interface is a **stack-based menu tree** with automatic hardware cleanup on back-navigation. Measurement modes sample every **500 ms**; the LCD refreshes on a 50 ms display flag with thread-safe writes.
 
+To ensure a highly responsive user interface, the **500 ms** hardware measurement routines run asynchronously or utilize non-blocking sleep intervals. This prevents the synchronous 8-bit SPI SAR sweeps from blocking encoder interrupt callbacks or delaying the **50 ms** LCD UI refresh cycle.
+
 ```
 while True:
     if display_needs_update → render_interface()
@@ -250,7 +252,7 @@ while True:
 | Comparator Output | 21 | LM339 Output |
 
 > [!NOTE]
-> **SAR performance (8-bit search):** Each iteration writes one MCP4131 wiper step over SPI (1 MHz, 2-byte frame ≈ 16 µs), waits **5 ms** for the divider/comparator to settle (`sleep(0.005)`), then reads GPIO 21. Eight bisection steps → **≈40 ms** per resistance reading, well under the **500 ms** LCD refresh cadence. Quantization is set by the **128-step** digipot (7-bit effective range); resistance resolution is non-linear with step (`R = R_known × step / (128 − step)`) and tightest near the matched mid-scale point.
+> **SAR performance (8-bit search):** Each iteration writes one MCP4131 wiper step over SPI (1 MHz, 2-byte frame ≈ 16 µs), waits **5 ms** for the divider/comparator to settle (`sleep(0.005)`), then reads GPIO 21. Eight bisection steps → **≈40 ms** per resistance reading, well under the **500 ms** LCD refresh cadence. Quantization is set by the **128-step** digipot (7-bit effective range); resistance resolution is non-linear with step (`R = R_known × step / (128 − step)`) and tightest near the matched mid-scale point. Because the voltage-divider topology yields a non-linear resolution across the 128-step digipot, measurement precision peaks when the unknown resistance closely matches the internal reference (**R_known**). Near the outer bounds (**500 Ω** and **10 kΩ**), step-size quantization broadens, which accounts for the specified worst-case **±10%** tolerance.
 
 </details>
 
@@ -334,7 +336,7 @@ Original binary-weighted DAC with per-GPIO comparator buffers suffered **cross-l
 
 **Objective:** Variable square wave centered at **0 V**, up to **±10 V**, high-Z output for oscilloscope use.
 
-**Theory:** Pi hardware PWM GPIO 12 → MCP4231 amplitude + offset → difference amplifier (gain 10) → ±10 V.
+**Theory:** Pi hardware PWM GPIO 12 → MCP4231 amplitude + offset → difference amplifier (gain 10) → ±10 V. The hardware PWM output from GPIO 12 passes through a dedicated **RC low-pass filter** stage to smooth high-frequency switching transients and stabilize the signal envelope before amplitude scaling, maintaining waveform integrity across the **100 Hz to 10 kHz** band.
 
 | Signal | GPIO | MCP4231 Pin |
 |---|---|---|
