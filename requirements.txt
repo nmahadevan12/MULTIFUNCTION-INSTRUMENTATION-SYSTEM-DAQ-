@@ -1,0 +1,6 @@
+gpiozero
+pigpio
+RPi.GPIO
+spidev
+smbus2
+RPLCD
