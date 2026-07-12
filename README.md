@@ -8,6 +8,8 @@ A portable, Raspberry Pi–powered electronic test bench that replaces six lab i
 [![Language](https://img.shields.io/badge/Language-Python-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Hardware](https://img.shields.io/badge/Hardware-KiCad%20PCB-314CB0?logo=kicad&logoColor=white)](https://www.kicad.org/)
 
+> **Documentation convention:** Images show only schematics, photos, and oscilloscope captures. All objectives, theory, calibration data, and figure captions are written as markdown text below each image — never baked into the image.
+
 ---
 
 ## Overview
@@ -131,6 +133,8 @@ while True:
 
 ![Power supply schematic](docs/images/power-supply.png)
 
+*Figure 4.1.1: Power Supply Schematic*
+
 **Objective:** Split a +24 V DC input into symmetric +12 V and −12 V rails to power op-amps throughout the system. Rails must remain stable under varying load.
 
 **Theory of Operation:** The supply uses a **virtual ground** approach. A TL081 unity-gain follower has its non-inverting input set to the 12 V midpoint of the 24 V supply via a matched resistive divider. The op-amp output drives a complementary push-pull stage (IRFZ34N NMOS + IRF5305 PMOS) that sources and sinks current symmetrically, establishing a stable virtual ground node tied to the Raspberry Pi's real ground. Connected circuits see +12 V above and −12 V below this reference.
@@ -145,9 +149,14 @@ while True:
 **GPIO:** None — purely analog hardware. Virtual ground tied to Pi GND for a unified reference.
 
 **Calibration & Testing:**
-- Both rails loaded: −12.04 V / +12.05 V at ~12 mA each
-- No load: −12.05 V / +12.06 V
-- Asymmetric load: each rail stable independently at ~12.05–12.06 V, ~12 mA
+
+| Test Condition | Negative Rail | Positive Rail | Current |
+|---|---|---|---|
+| Both loads connected | −12.04 V | +12.05 V | ~12 mA each |
+| No load | −12.05 V | +12.06 V | — |
+| Negative load only | 12.05 V | — | 12.10 mA |
+| Positive load only | — | 12.06 V | 12.08 mA |
+
 - 250 Ω equivalent load (three 750 Ω in parallel): 48 mA total, 0.192 W per resistor (within 0.5 W rating and 2× safety margin)
 - Design change: 200 µF ceramic → 220 µF electrolytic for better bulk capacitance under switching loads
 
@@ -160,6 +169,8 @@ while True:
 ### 4.2 Ohmmeter
 
 ![Ohmmeter schematic](docs/images/ohmmeter-schematic.png)
+
+*Figure 4.2.1: Ohmmeter Schematic*
 
 **Objective:** High-accuracy auto-ranging digital ohmmeter for **500 Ω to 10 kΩ**.
 
@@ -179,16 +190,22 @@ while True:
 The MCP4131 wiper feeds the LM339 non-inverting input. The unknown resistor forms a divider with a 10 kΩ pull-up to 3.3 V at the inverting input. GPIO 21 reads the comparator for binary search convergence.
 
 **Calibration & Testing:**
-- **545.2 Ω** — accurate live reading ([demo video](https://youtube.com/shorts/uuvFe1sM46w))
-- **5.34 kΩ** — consistent within tolerance ([demo video](https://youtube.com/shorts/DNIFMVdOc38))
-- **10.06 kΩ** — reliable at upper range ([demo video](https://youtube.com/shorts/9y2mZVJNhto))
-- Consistent small error offset observed, but reliable across full 500 Ω – 10 kΩ range
+
+| Test Resistor | Result | Demo |
+|---|---|---|
+| 545.2 Ω | Accurate live reading | [Video](https://youtube.com/shorts/uuvFe1sM46w) |
+| 5.34 kΩ | Consistent within tolerance | [Video](https://youtube.com/shorts/DNIFMVdOc38) |
+| 10.06 kΩ | Reliable at upper range | [Video](https://youtube.com/shorts/9y2mZVJNhto) |
+
+Consistent small error offset observed; reliable across full 500 Ω – 10 kΩ range.
 
 ---
 
 ### 4.3 Voltmeter
 
 ![Voltmeter schematic](docs/images/voltmeter-schematic.png)
+
+*Figure 4.3.1: Voltmeter Schematic*
 
 **Objective:** Measure external and internal DC voltages from **−5 V to +5 V** with ±0.2 V accuracy. Supports dual-source operation (external input or internal DC reference verification).
 
@@ -213,8 +230,7 @@ The MCP4131 wiper feeds the LM339 non-inverting input. The unknown resistor form
 
 **Calibration & Testing:** LCD readouts verified against a reference multimeter across the full range using the characterization table below. SAR converges in 8 iterations. One-minute stability test at fixed input confirmed no flicker at 500 ms intervals. ±0.2 V accuracy maintained; best precision near 0 V; slight offset at range extremes from input protection drop.
 
-<details>
-<summary><strong>Voltmeter calibration table (input voltage → digipot step)</strong></summary>
+**Voltmeter Calibration Table (Appendix Table 4.3.1):**
 
 | Voltmeter Value (V) | Digipot Step |
 |---:|---:|
@@ -319,13 +335,13 @@ The MCP4131 wiper feeds the LM339 non-inverting input. The unknown resistor form
 | +4.90 | 124 |
 | +5.00 | 125 |
 
-</details>
-
 ---
 
 ### 4.4 DC Reference
 
 ![DC reference schematic](docs/images/dc-reference-schematic.png)
+
+*Figure 4.4.1: DC Ref Schematic*
 
 **Objective:** Stable, programmable DC output from **−5 V to +5 V** in 0.625 V steps (32 levels), adjustable via rotary encoder. Used to calibrate the voltmeter and as an external reference source.
 
@@ -341,12 +357,13 @@ The MCP4131 wiper feeds the LM339 non-inverting input. The unknown resistor form
 
 ![Previous DC reference schematic](docs/images/dc-reference-previous-design.png)
 
+*Figure 4.4.2: Previous DC Ref Schematic*
+
 An earlier binary-weighted resistor DAC with comparator buffers on each GPIO line suffered from **cross-loading** — changing one bit altered the impedance seen by all others, producing incorrect voltages even when pins were off. The R-2R ladder maintains uniform 2R impedance in both directions regardless of bit pattern, eliminating this issue.
 
 **Calibration & Testing:**
 
-<details>
-<summary><strong>DC reference measured output table (step → voltage)</strong></summary>
+**DC Reference Measured Output (Table 4.4.1):**
 
 | Step | Binary Value | Measured Vout (V) |
 |---:|---|---:|
@@ -383,13 +400,13 @@ An earlier binary-weighted resistor DAC with comparator buffers on each GPIO lin
 | 30 | 11110 | +4.647 |
 | 31 | 11111 | +5.008 |
 
-</details>
-
 ---
 
 ### 4.5 Square Wave Generator
 
 ![Square wave generator schematic](docs/images/square-wave-schematic.png)
+
+*Figure 4.5.1: Square Wave Schematic*
 
 **Objective:** Variable-frequency, variable-amplitude square wave centered at **0 V** with up to **±10 V** swing and high output impedance for oscilloscope measurement.
 
@@ -408,20 +425,25 @@ An earlier binary-weighted resistor DAC with comparator buffers on each GPIO lin
 
 **Calibration & Testing:** [Demo video](https://youtube.com/shorts/NfCk3m-b2u8)
 
-- Initial 0.5 wiper offset ratio: −7.24 V / +5.95 V (miscentered)
-- Final offset ratio **0.45** (below ideal 0.5 due to MCP4231 channel variation) → ±3% centering tolerance
-- Buffer amplifiers significantly reduced noise and improved waveform cleanliness
+- **Figure 4.5.2 — initial testing (±7 V):** Naive 0.5 wiper ratio produced −7.24 V min / +5.95 V max (miscentered; peak-to-peak approximately correct)
+- **Figure 4.5.3 — ±5 V, 100 Hz final result:** After offset ratio correction to **0.45**, centering tolerance ≈ ±3%
+- **Figure 4.5.4 — ±10 V, 100 Hz final result:** Confirmed full swing; buffer amplifiers reduced noise
 
-<p align="center">
-  <img src="docs/images/square-wave-test-5v.png" alt="Oscilloscope capture — ±5 V square wave at 100 Hz" width="48%">
-  <img src="docs/images/square-wave-test-10v.png" alt="Oscilloscope capture — ±10 V square wave at 100 Hz" width="48%">
-</p>
+![Oscilloscope — square wave at 1 kHz during initial characterization](docs/images/square-wave-test-5v-a.png)
+
+![Oscilloscope — ±5 V square wave at 100 Hz, final result](docs/images/square-wave-test-5v-b.png)
+
+![Oscilloscope — ±10 V square wave at 100 Hz, final result (close-up)](docs/images/square-wave-test-10v-a.png)
+
+![Oscilloscope — ±10 V square wave at 100 Hz, final result (bench setup)](docs/images/square-wave-test-10v-b.png)
 
 ---
 
 ### 4.6 Sine Wave Measurement (Frequency Meter)
 
 ![Sine wave measurement schematic](docs/images/sine-measurement-schematic.png)
+
+*Figure 4.6.1: Sine Wave Measurement Schematic*
 
 **Objective:** Measure frequency of an external **0 V to +10 V** sine input from **1 kHz to 10 kHz**.
 
@@ -483,7 +505,11 @@ An earlier binary-weighted resistor DAC with comparator buffers on each GPIO lin
 
 ![Hierarchical PCB schematic](docs/images/pcb-schematic.png)
 
+*Figure 5.2.1: Final PCB Schematic*
+
 ![PCB board layout](docs/images/pcb-layout.png)
+
+*Figure 5.2.2: Final PCB Board*
 
 **CAD tool:** KiCad — free, full-featured, low learning curve vs. Altium/Fusion 360.
 
