@@ -134,22 +134,6 @@ flowchart LR
     PS --> HW
 ```
 
-```mermaid
-stateDiagram-v2
-    [*] --> Main
-    Main --> ModeSelect: Mode Select
-    ModeSelect --> FuncGen: Function Generator
-    ModeSelect --> Ohmmeter
-    ModeSelect --> Voltmeter
-    ModeSelect --> DCRef: DC Reference
-    ModeSelect --> FreqMeas: Frequency Measurement
-    FuncGen --> ModeSelect: Hold 3s
-    Ohmmeter --> ModeSelect: Hold 3s
-    Voltmeter --> ModeSelect: Hold 3s
-    DCRef --> ModeSelect: Hold 3s
-    FreqMeas --> ModeSelect: Hold 3s
-```
-
 ---
 
 ## Software Architecture
@@ -353,7 +337,7 @@ Original binary-weighted DAC with per-GPIO comparator buffers suffered **cross-l
 | SPI Clock | 11 | Pin 3 |
 | SPI Data In | 10 | Pin 4 |
 
-**Calibration & Testing:** [Demo video](https://youtube.com/shorts/NfCk3m-b2u8)
+**Calibration & Testing:**
 
 - **Figure 4.5.2 — ±7 V initial:** −7.24 V min / +5.95 V max (miscentered)
 - **Figure 4.5.3 — ±5 V @ 100 Hz:** Offset ratio **0.45** → ±3% centering
@@ -368,9 +352,7 @@ Original binary-weighted DAC with per-GPIO comparator buffers suffered **cross-l
 
 ![Oscilloscope — ±5 V square wave at 100 Hz, final result](docs/images/square-wave-test-5v-b.png)
 
-![Oscilloscope — ±10 V square wave at 100 Hz, final result (close-up)](docs/images/square-wave-test-10v-a.png)
-
-![Oscilloscope — ±10 V square wave at 100 Hz, final result (bench setup)](docs/images/square-wave-test-10v-b.png)
+![Oscilloscope — ±10 V square wave at 100 Hz, final result](docs/images/square-wave-test-10v-a.png)
 
 </details>
 
@@ -395,7 +377,7 @@ Original binary-weighted DAC with per-GPIO comparator buffers suffered **cross-l
 | External Input | — | LM339 Non-Inverting Input |
 | Reference (+1.65 V) | — | LM339 Inverting Input |
 
-**Calibration & Testing:** [Demo video](https://youtube.com/shorts/Z5qWBG-sBkY) — ±2% tolerance across 1 – 10 kHz.
+**Calibration & Testing:** ±2% tolerance across 1 – 10 kHz.
 
 </details>
 
@@ -420,8 +402,6 @@ Original binary-weighted DAC with per-GPIO comparator buffers suffered **cross-l
 | Chip Select | 17 | Pin 1 |
 | SPI Clock | 11 | Pin 2 |
 | SPI Data | 10 | Pin 3 |
-
-**Calibration & Testing:** [Demo video](https://youtube.com/shorts/mf1v4rBYL3M)
 
 </details>
 
